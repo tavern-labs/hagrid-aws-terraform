@@ -28,7 +28,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -42,23 +42,15 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-            -backend-config="key=aws/terraform.tfstate" \
-            -backend-config="region=${{ vars.AWS_REGION || 'us-east-1' }}" \
-            -backend-config="encrypt=true"
-
+        run: terraform init 
+        
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
 
       - name: Terraform Plan
         id: plan
-        run: |
-          terraform plan -no-color -input=false \
-            -var="aws_region=${{ vars.AWS_REGION || 'us-east-1' }}" \
-            -out=tfplan
+        run: terraform plan -no-color -input=false 
         continue-on-error: true
 
       - name: Update Pull Request
@@ -94,10 +86,3 @@ jobs:
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
         run: exit 1
-
-      - name: Upload Plan
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: tfplan
-          retention-days: 5
