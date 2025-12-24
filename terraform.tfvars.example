@@ -1,0 +1,8 @@
+# Copy this file to terraform.tfvars and update with your values
+# terraform.tfvars is gitignored to prevent committing sensitive data
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Project Configuration
+project_name = "hagrid"

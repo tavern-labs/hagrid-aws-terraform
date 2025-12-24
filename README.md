@@ -1,2 +1,3 @@
-# hagrid-aws-terraform
-AWS terraform for hagrid project
+# Hagrid AWS Terraform
+
+AWS infrastructure for the Hagrid AI Access Bot project.
