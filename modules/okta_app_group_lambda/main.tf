@@ -13,9 +13,9 @@ resource "aws_lambda_function" "okta_app_group_updater" {
 
   environment {
     variables = {
-      SSM_PARAMETER_NAME = var.ssm_parameter_name
-      OKTA_SECRET_NAME   = var.okta_secret_name
-      LOG_LEVEL          = "INFO"
+      SSM_PARAMETER_NAME        = var.ssm_parameter_name
+      OKTA_CREDENTIALS_SSM_NAME = var.okta_credentials_ssm_name
+      LOG_LEVEL                 = "INFO"
     }
   }
 

@@ -8,14 +8,14 @@ output "app_context_parameter_arn" {
   value       = aws_ssm_parameter.app_context.arn
 }
 
-output "okta_secret_arn" {
-  description = "ARN of the Secrets Manager secret storing Okta credentials"
-  value       = aws_secretsmanager_secret.okta_credentials.arn
+output "okta_credentials_parameter_arn" {
+  description = "ARN of the SSM parameter storing Okta credentials"
+  value       = aws_ssm_parameter.okta_credentials.arn
 }
 
-output "okta_secret_name" {
-  description = "Name of the Secrets Manager secret storing Okta credentials"
-  value       = aws_secretsmanager_secret.okta_credentials.name
+output "okta_credentials_parameter_name" {
+  description = "Name of the SSM parameter storing Okta credentials"
+  value       = aws_ssm_parameter.okta_credentials.name
 }
 
 output "lambda_function_name" {

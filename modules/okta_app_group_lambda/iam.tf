@@ -41,9 +41,9 @@ resource "aws_iam_role_policy" "lambda_ssm" {
   })
 }
 
-# Policy for Secrets Manager access (to read Okta credentials)
-resource "aws_iam_role_policy" "lambda_secrets" {
-  name = "${var.project_name}-okta-lambda-secrets"
+# Policy for SSM Parameter Store access (to read Okta credentials)
+resource "aws_iam_role_policy" "lambda_okta_credentials" {
+  name = "${var.project_name}-okta-lambda-credentials"
   role = aws_iam_role.lambda_role.id
 
   policy = jsonencode({
@@ -52,9 +52,10 @@ resource "aws_iam_role_policy" "lambda_secrets" {
       {
         Effect = "Allow"
         Action = [
-          "secretsmanager:GetSecretValue"
+          "ssm:GetParameter",
+          "ssm:GetParameters"
         ]
-        Resource = var.okta_secret_arn
+        Resource = var.okta_credentials_ssm_arn
       }
     ]
   })

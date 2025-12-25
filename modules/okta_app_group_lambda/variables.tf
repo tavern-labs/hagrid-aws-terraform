@@ -18,13 +18,13 @@ variable "ssm_parameter_arn" {
   type        = string
 }
 
-variable "okta_secret_arn" {
-  description = "ARN of the Secrets Manager secret containing Okta credentials"
+variable "okta_credentials_ssm_arn" {
+  description = "ARN of the SSM parameter containing Okta credentials"
   type        = string
 }
 
-variable "okta_secret_name" {
-  description = "Name of the Secrets Manager secret containing Okta credentials"
+variable "okta_credentials_ssm_name" {
+  description = "Name of the SSM parameter containing Okta credentials"
   type        = string
 }
 
