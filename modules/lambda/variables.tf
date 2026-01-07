@@ -33,8 +33,14 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "role_arn" {
+  description = "ARN of existing IAM role for Lambda execution. If not provided, module will create role with iam_policy_statements"
+  type        = string
+  default     = null
+}
+
 variable "iam_policy_statements" {
-  description = "List of IAM policy statements for custom Lambda permissions"
+  description = "List of IAM policy statements for custom Lambda permissions (only used if role_arn is not provided)"
   type        = list(any)
   default     = []
 }

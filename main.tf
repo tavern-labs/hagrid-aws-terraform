@@ -56,34 +56,13 @@ module "okta_app_group_lambda" {
   memory_size   = 512
   timeout       = 300
   aws_region    = var.aws_region
+  role_arn      = aws_iam_role.okta_lambda_role.arn
 
   environment_variables = {
     SSM_PARAMETER_NAME        = aws_ssm_parameter.app_context.name
     OKTA_CREDENTIALS_SSM_NAME = aws_ssm_parameter.okta_credentials.name
     LOG_LEVEL                 = "INFO"
   }
-
-  iam_policy_statements = [
-    # SSM parameter write access for app context
-    {
-      Effect = "Allow"
-      Action = [
-        "ssm:PutParameter",
-        "ssm:GetParameter",
-        "ssm:GetParameters"
-      ]
-      Resource = aws_ssm_parameter.app_context.arn
-    },
-    # SSM parameter read access for Okta credentials
-    {
-      Effect = "Allow"
-      Action = [
-        "ssm:GetParameter",
-        "ssm:GetParameters"
-      ]
-      Resource = aws_ssm_parameter.okta_credentials.arn
-    }
-  ]
 }
 
 # DynamoDB tables for Hagrid Slack bot
@@ -103,6 +82,7 @@ module "event_handler_lambda" {
   memory_size   = 128
   timeout       = 10
   aws_region    = var.aws_region
+  role_arn      = aws_iam_role.event_handler_lambda_role.arn
 
   environment_variables = {
     CONVERSATIONS_TABLE        = module.dynamodb_tables.conversations_table_name
@@ -112,46 +92,6 @@ module "event_handler_lambda" {
     OKTA_CREDENTIALS_SSM_NAME  = aws_ssm_parameter.okta_credentials.name
     LOG_LEVEL                  = "INFO"
   }
-
-  iam_policy_statements = [
-    # Lambda invoke permissions for calling other Hagrid Lambdas
-    {
-      Effect = "Allow"
-      Action = [
-        "lambda:InvokeFunction"
-      ]
-      Resource = "arn:aws:lambda:${var.aws_region}:*:function:${var.project_name}-*"
-    },
-    # SSM parameter read access
-    {
-      Effect = "Allow"
-      Action = [
-        "ssm:GetParameter",
-        "ssm:GetParameters"
-      ]
-      Resource = "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/*"
-    },
-    # DynamoDB read/write access for all Hagrid tables
-    {
-      Effect = "Allow"
-      Action = [
-        "dynamodb:GetItem",
-        "dynamodb:PutItem",
-        "dynamodb:UpdateItem",
-        "dynamodb:DeleteItem",
-        "dynamodb:Query",
-        "dynamodb:Scan"
-      ]
-      Resource = [
-        module.dynamodb_tables.conversations_table_arn,
-        module.dynamodb_tables.access_requests_table_arn,
-        module.dynamodb_tables.approval_messages_table_arn,
-        "${module.dynamodb_tables.conversations_table_arn}/index/*",
-        "${module.dynamodb_tables.access_requests_table_arn}/index/*",
-        "${module.dynamodb_tables.approval_messages_table_arn}/index/*"
-      ]
-    }
-  ]
 }
 
 # API Gateway REST API for Slack webhook

@@ -1,6 +1,8 @@
 # IAM role for Lambda execution
+# Only created if role_arn is not provided (for backward compatibility)
 resource "aws_iam_role" "lambda_role" {
-  name = "${var.function_name}-role"
+  count = var.role_arn == null ? 1 : 0
+  name  = "${var.function_name}-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -21,9 +23,11 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 # CloudWatch Logs policy (required for all Lambdas)
+# Only created if role_arn is not provided
 resource "aws_iam_role_policy" "cloudwatch_logs" {
-  name = "${var.function_name}-cloudwatch-logs"
-  role = aws_iam_role.lambda_role.id
+  count = var.role_arn == null ? 1 : 0
+  name  = "${var.function_name}-cloudwatch-logs"
+  role  = aws_iam_role.lambda_role[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -42,10 +46,11 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
 }
 
 # Custom IAM policy for additional permissions
+# Only created if role_arn is not provided
 resource "aws_iam_role_policy" "custom_policy" {
-  count = length(var.iam_policy_statements) > 0 ? 1 : 0
+  count = var.role_arn == null && length(var.iam_policy_statements) > 0 ? 1 : 0
   name  = "${var.function_name}-custom-policy"
-  role  = aws_iam_role.lambda_role.id
+  role  = aws_iam_role.lambda_role[0].id
 
   policy = jsonencode({
     Version   = "2012-10-17"

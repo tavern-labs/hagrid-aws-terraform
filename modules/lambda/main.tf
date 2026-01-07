@@ -6,7 +6,7 @@
 # Lambda function
 resource "aws_lambda_function" "function" {
   function_name = var.function_name
-  role          = aws_iam_role.lambda_role.arn
+  role          = var.role_arn != null ? var.role_arn : aws_iam_role.lambda_role[0].arn
   handler       = var.handler
   runtime       = var.runtime
   timeout       = var.timeout
