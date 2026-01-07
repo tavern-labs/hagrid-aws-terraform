@@ -61,3 +61,10 @@ module "okta_app_group_lambda" {
   lambda_timeout     = 300
   lambda_memory_size = 512
 }
+
+# DynamoDB tables for Hagrid Slack bot
+module "dynamodb_tables" {
+  source = "./modules/dynamodb_tables"
+
+  project_name = var.project_name
+}

@@ -32,3 +32,34 @@ output "lambda_role_arn" {
   description = "ARN of the Lambda execution role"
   value       = module.okta_app_group_lambda.lambda_role_arn
 }
+
+# DynamoDB table outputs
+output "conversations_table_name" {
+  description = "Name of the conversations DynamoDB table"
+  value       = module.dynamodb_tables.conversations_table_name
+}
+
+output "conversations_table_arn" {
+  description = "ARN of the conversations DynamoDB table"
+  value       = module.dynamodb_tables.conversations_table_arn
+}
+
+output "access_requests_table_name" {
+  description = "Name of the access requests DynamoDB table"
+  value       = module.dynamodb_tables.access_requests_table_name
+}
+
+output "access_requests_table_arn" {
+  description = "ARN of the access requests DynamoDB table"
+  value       = module.dynamodb_tables.access_requests_table_arn
+}
+
+output "approval_messages_table_name" {
+  description = "Name of the approval messages DynamoDB table"
+  value       = module.dynamodb_tables.approval_messages_table_name
+}
+
+output "approval_messages_table_arn" {
+  description = "ARN of the approval messages DynamoDB table"
+  value       = module.dynamodb_tables.approval_messages_table_arn
+}
