@@ -20,17 +20,17 @@ output "okta_credentials_parameter_name" {
 
 output "lambda_function_name" {
   description = "Name of the Okta app group updater Lambda function"
-  value       = module.okta_app_group_lambda.lambda_function_name
+  value       = module.okta_app_group_lambda.function_name
 }
 
 output "lambda_function_arn" {
   description = "ARN of the Okta app group updater Lambda function"
-  value       = module.okta_app_group_lambda.lambda_function_arn
+  value       = module.okta_app_group_lambda.function_arn
 }
 
 output "lambda_role_arn" {
   description = "ARN of the Lambda execution role"
-  value       = module.okta_app_group_lambda.lambda_role_arn
+  value       = module.okta_app_group_lambda.role_arn
 }
 
 # DynamoDB table outputs

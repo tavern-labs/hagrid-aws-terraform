@@ -46,20 +46,44 @@ resource "aws_ssm_parameter" "okta_credentials" {
   }
 }
 
-# Okta App Group Lambda module
+# Okta App Group Lambda - context updater
 module "okta_app_group_lambda" {
-  source = "./modules/okta_app_group_lambda"
+  source = "./modules/lambda"
 
-  project_name              = var.project_name
-  aws_region                = var.aws_region
-  ssm_parameter_name        = aws_ssm_parameter.app_context.name
-  ssm_parameter_arn         = aws_ssm_parameter.app_context.arn
-  okta_credentials_ssm_name = aws_ssm_parameter.okta_credentials.name
-  okta_credentials_ssm_arn  = aws_ssm_parameter.okta_credentials.arn
+  function_name = "${var.project_name}-okta-app-group-updater"
+  handler       = "index.lambda_handler"
+  runtime       = "python3.12"
+  memory_size   = 512
+  timeout       = 300
+  aws_region    = var.aws_region
 
-  # Optional: customize Lambda settings
-  lambda_timeout     = 300
-  lambda_memory_size = 512
+  environment_variables = {
+    SSM_PARAMETER_NAME        = aws_ssm_parameter.app_context.name
+    OKTA_CREDENTIALS_SSM_NAME = aws_ssm_parameter.okta_credentials.name
+    LOG_LEVEL                 = "INFO"
+  }
+
+  iam_policy_statements = [
+    # SSM parameter write access for app context
+    {
+      Effect = "Allow"
+      Action = [
+        "ssm:PutParameter",
+        "ssm:GetParameter",
+        "ssm:GetParameters"
+      ]
+      Resource = aws_ssm_parameter.app_context.arn
+    },
+    # SSM parameter read access for Okta credentials
+    {
+      Effect = "Allow"
+      Action = [
+        "ssm:GetParameter",
+        "ssm:GetParameters"
+      ]
+      Resource = aws_ssm_parameter.okta_credentials.arn
+    }
+  ]
 }
 
 # DynamoDB tables for Hagrid Slack bot
