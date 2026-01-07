@@ -1,12 +1,13 @@
 # Reusable Lambda function module
 # NOTE: Code, runtime, layers, and configuration are managed manually or via CI/CD
-# Terraform only manages the Lambda shell, IAM roles, and infrastructure
+# Terraform only manages the Lambda shell and infrastructure
+# IAM roles MUST be defined in root iam.tf - this enforces centralized security control
 # See lifecycle.ignore_changes block for details on what is NOT managed by Terraform
 
 # Lambda function
 resource "aws_lambda_function" "function" {
   function_name = var.function_name
-  role          = var.role_arn != null ? var.role_arn : aws_iam_role.lambda_role[0].arn
+  role          = var.role_arn
   handler       = var.handler
   runtime       = var.runtime
   timeout       = var.timeout

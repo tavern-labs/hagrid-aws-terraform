@@ -34,15 +34,8 @@ variable "environment_variables" {
 }
 
 variable "role_arn" {
-  description = "ARN of existing IAM role for Lambda execution. If not provided, module will create role with iam_policy_statements"
+  description = "ARN of IAM role for Lambda execution (must be defined in root iam.tf)"
   type        = string
-  default     = null
-}
-
-variable "iam_policy_statements" {
-  description = "List of IAM policy statements for custom Lambda permissions (only used if role_arn is not provided)"
-  type        = list(any)
-  default     = []
 }
 
 variable "aws_region" {

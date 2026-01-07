@@ -4,6 +4,17 @@
 # All IAM resources are defined here for security audit and review.
 # This separation allows security teams to review IAM changes independently
 # from application infrastructure changes.
+#
+# SECURITY PATTERN: Enterprise-Grade Centralized IAM
+# - Lambda modules REQUIRE role_arn parameter (no fallback IAM creation)
+# - All roles and policies defined in this file only
+# - Enforces security review workflow and compliance standards
+# - Mirrors patterns used at Netflix, Stripe, Coinbase, OpenAI, etc.
+#
+# To add a new Lambda:
+# 1. Define IAM role in this file
+# 2. Define required policies in this file
+# 3. Pass role ARN to lambda module
 # ============================================================================
 
 # ----------------------------------------------------------------------------
