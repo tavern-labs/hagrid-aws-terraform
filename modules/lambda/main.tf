@@ -1,25 +1,24 @@
-# Lambda function
+# Reusable Lambda function module
 # NOTE: Code, runtime, layers, and configuration are managed manually or via CI/CD
-# Terraform only manages the Lambda shell, IAM roles, and infrastructure
+# Terraform only manages the Lambda shell and infrastructure
+# IAM roles MUST be defined in root iam.tf - this enforces centralized security control
 # See lifecycle.ignore_changes block for details on what is NOT managed by Terraform
-resource "aws_lambda_function" "okta_app_group_updater" {
-  function_name    = "${var.project_name}-okta-app-group-updater"
-  role            = aws_iam_role.lambda_role.arn
-  handler         = "index.lambda_handler"
-  runtime         = "python3.12"
-  timeout         = var.lambda_timeout
-  memory_size     = var.lambda_memory_size
 
-  # Minimal placeholder code - update manually in console
+# Lambda function
+resource "aws_lambda_function" "function" {
+  function_name = var.function_name
+  role          = var.role_arn
+  handler       = var.handler
+  runtime       = var.runtime
+  timeout       = var.timeout
+  memory_size   = var.memory_size
+
+  # Minimal placeholder code - update manually in console or via CI/CD
   filename         = data.archive_file.placeholder.output_path
   source_code_hash = data.archive_file.placeholder.output_base64sha256
 
   environment {
-    variables = {
-      SSM_PARAMETER_NAME        = var.ssm_parameter_name
-      OKTA_CREDENTIALS_SSM_NAME = var.okta_credentials_ssm_name
-      LOG_LEVEL                 = "INFO"
-    }
+    variables = var.environment_variables
   }
 
   lifecycle {
@@ -50,22 +49,22 @@ resource "aws_lambda_function" "okta_app_group_updater" {
   }
 
   tags = {
-    Name = "${var.project_name}-okta-app-group-updater"
+    Name = var.function_name
   }
 }
 
 # Minimal placeholder code for initial deployment
 resource "local_file" "placeholder_code" {
-  filename = "${path.module}/placeholder/index.py"
+  filename = "${path.module}/placeholder/${var.function_name}/index.py"
   content  = <<-EOT
     def lambda_handler(event, context):
-        return {'statusCode': 200, 'body': 'Placeholder - update code manually'}
+        return {'statusCode': 200, 'body': 'Placeholder - update code manually or via CI/CD'}
   EOT
 }
 
 data "archive_file" "placeholder" {
   type        = "zip"
-  output_path = "${path.module}/placeholder.zip"
+  output_path = "${path.module}/placeholder/${var.function_name}.zip"
 
   source {
     content  = local_file.placeholder_code.content
