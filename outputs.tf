@@ -63,3 +63,25 @@ output "approval_messages_table_arn" {
   description = "ARN of the approval messages DynamoDB table"
   value       = module.dynamodb_tables.approval_messages_table_arn
 }
+
+# API Gateway outputs
+output "api_gateway_url" {
+  description = "Base URL of the API Gateway (use this for Slack webhook configuration)"
+  value       = "${aws_api_gateway_stage.prod.invoke_url}/slack/events"
+}
+
+output "api_gateway_id" {
+  description = "ID of the API Gateway REST API"
+  value       = aws_api_gateway_rest_api.hagrid_api.id
+}
+
+# Event Handler Lambda outputs
+output "event_handler_function_name" {
+  description = "Name of the Event Handler Lambda function"
+  value       = module.event_handler_lambda.function_name
+}
+
+output "event_handler_function_arn" {
+  description = "ARN of the Event Handler Lambda function"
+  value       = module.event_handler_lambda.function_arn
+}
