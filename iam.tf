@@ -261,30 +261,10 @@ resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
 # Data source to get AWS account ID
 data "aws_caller_identity" "current" {}
 
-# GitHub OIDC Provider
-# IMPORTANT: If this provider already exists in your AWS account, you may get
-# an error. In that case, import it or use a data source instead:
-# terraform import aws_iam_openid_connect_provider.github_actions arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com
-
-resource "aws_iam_openid_connect_provider" "github_actions" {
+# GitHub OIDC Provider - reference existing provider
+# Uses data source since the provider already exists in the AWS account
+data "aws_iam_openid_connect_provider" "github_actions" {
   url = "https://token.actions.githubusercontent.com"
-
-  client_id_list = [
-    "sts.amazonaws.com"
-  ]
-
-  # GitHub's thumbprint - this is static and provided by GitHub
-  thumbprint_list = [
-    "6938fd4d98bab03faadb97b34396831e3780aea1",
-    "1c58a3a8518e8759bf075b76b750d4f2df264fcd"
-  ]
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "github-actions-oidc"
-    }
-  )
 }
 
 # IAM Role for GitHub Actions Lambda Deployment
@@ -300,7 +280,7 @@ resource "aws_iam_role" "github_lambda_deploy" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+          Federated = data.aws_iam_openid_connect_provider.github_actions.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
