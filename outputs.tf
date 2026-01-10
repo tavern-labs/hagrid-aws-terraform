@@ -18,19 +18,19 @@ output "okta_credentials_parameter_name" {
   value       = aws_ssm_parameter.okta_credentials.name
 }
 
-output "lambda_function_name" {
-  description = "Name of the Okta app group updater Lambda function"
-  value       = module.okta_app_group_lambda.function_name
+output "catalog_builder_function_name" {
+  description = "Name of the Catalog Builder Lambda function"
+  value       = module.catalog_builder_lambda.function_name
 }
 
-output "lambda_function_arn" {
-  description = "ARN of the Okta app group updater Lambda function"
-  value       = module.okta_app_group_lambda.function_arn
+output "catalog_builder_function_arn" {
+  description = "ARN of the Catalog Builder Lambda function"
+  value       = module.catalog_builder_lambda.function_arn
 }
 
-output "lambda_role_arn" {
-  description = "ARN of the Lambda execution role"
-  value       = module.okta_app_group_lambda.role_arn
+output "catalog_builder_role_arn" {
+  description = "ARN of the Catalog Builder Lambda execution role"
+  value       = module.catalog_builder_lambda.role_arn
 }
 
 # DynamoDB table outputs
@@ -84,4 +84,10 @@ output "event_handler_function_name" {
 output "event_handler_function_arn" {
   description = "ARN of the Event Handler Lambda function"
   value       = module.event_handler_lambda.function_arn
+}
+
+# GitHub Actions OIDC outputs
+output "github_lambda_deploy_role_arn" {
+  description = "ARN of the GitHub Actions role for Lambda deployment (use this in GitHub repository secrets)"
+  value       = aws_iam_role.github_lambda_deploy.arn
 }

@@ -46,17 +46,17 @@ resource "aws_ssm_parameter" "okta_credentials" {
   }
 }
 
-# Okta App Group Lambda - context updater
-module "okta_app_group_lambda" {
+# Catalog Builder Lambda - builds context from Okta apps and groups
+module "catalog_builder_lambda" {
   source = "./modules/lambda"
 
-  function_name = "${var.project_name}-okta-app-group-updater"
+  function_name = "${var.project_name}-catalog-builder"
   handler       = "index.lambda_handler"
   runtime       = "python3.12"
   memory_size   = 512
   timeout       = 300
   aws_region    = var.aws_region
-  role_arn      = aws_iam_role.okta_lambda_role.arn
+  role_arn      = aws_iam_role.catalog_builder_lambda_role.arn
 
   environment_variables = {
     SSM_PARAMETER_NAME        = aws_ssm_parameter.app_context.name
