@@ -18,11 +18,11 @@
 # ============================================================================
 
 # ----------------------------------------------------------------------------
-# Okta App Group Updater Lambda Role
+# Catalog Builder Lambda Role
 # ----------------------------------------------------------------------------
 
-resource "aws_iam_role" "okta_lambda_role" {
-  name = "${var.project_name}-okta-app-group-updater-role"
+resource "aws_iam_role" "catalog_builder_lambda_role" {
+  name = "${var.project_name}-catalog-builder-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -40,16 +40,16 @@ resource "aws_iam_role" "okta_lambda_role" {
   tags = merge(
     local.common_tags,
     {
-      Name    = "${var.project_name}-okta-lambda-role"
-      Purpose = "Execution role for Okta app group context updater Lambda"
+      Name    = "${var.project_name}-catalog-builder-lambda-role"
+      Purpose = "Execution role for catalog builder Lambda"
     }
   )
 }
 
-# CloudWatch Logs policy for Okta Lambda
-resource "aws_iam_role_policy" "okta_lambda_cloudwatch" {
-  name = "${var.project_name}-okta-lambda-cloudwatch"
-  role = aws_iam_role.okta_lambda_role.id
+# CloudWatch Logs policy for Catalog Builder Lambda
+resource "aws_iam_role_policy" "catalog_builder_lambda_cloudwatch" {
+  name = "${var.project_name}-catalog-builder-lambda-cloudwatch"
+  role = aws_iam_role.catalog_builder_lambda_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -61,16 +61,16 @@ resource "aws_iam_role_policy" "okta_lambda_cloudwatch" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.project_name}-okta-app-group-updater:*"
+        Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.project_name}-catalog-builder:*"
       }
     ]
   })
 }
 
-# SSM Parameter access for Okta Lambda
-resource "aws_iam_role_policy" "okta_lambda_ssm" {
-  name = "${var.project_name}-okta-lambda-ssm"
-  role = aws_iam_role.okta_lambda_role.id
+# SSM Parameter access for Catalog Builder Lambda
+resource "aws_iam_role_policy" "catalog_builder_lambda_ssm" {
+  name = "${var.project_name}-catalog-builder-lambda-ssm"
+  role = aws_iam_role.catalog_builder_lambda_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -250,4 +250,101 @@ resource "aws_iam_role" "api_gateway_cloudwatch" {
 resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
   role       = aws_iam_role.api_gateway_cloudwatch.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+}
+
+# ----------------------------------------------------------------------------
+# GitHub Actions OIDC Federation for Lambda Deployments
+# ----------------------------------------------------------------------------
+# This section manages OIDC federation between GitHub Actions and AWS,
+# allowing GitHub workflows to assume IAM roles without static credentials.
+
+# Data source to get AWS account ID
+data "aws_caller_identity" "current" {}
+
+# GitHub OIDC Provider
+# IMPORTANT: If this provider already exists in your AWS account, you may get
+# an error. In that case, import it or use a data source instead:
+# terraform import aws_iam_openid_connect_provider.github_actions arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com
+
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+
+  # GitHub's thumbprint - this is static and provided by GitHub
+  thumbprint_list = [
+    "6938fd4d98bab03faadb97b34396831e3780aea1",
+    "1c58a3a8518e8759bf075b76b750d4f2df264fcd"
+  ]
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "github-actions-oidc"
+    }
+  )
+}
+
+# IAM Role for GitHub Actions Lambda Deployment
+# This role allows GitHub Actions to deploy Lambda function code ONLY.
+# It cannot modify infrastructure, only update function code.
+
+resource "aws_iam_role" "github_lambda_deploy" {
+  name = "${var.project_name}-lambda-deploy-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
+          StringLike = {
+            # Only allow from main branch of the hagrid-lambdas repo
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_org}/${var.github_lambda_repo}:ref:refs/heads/main"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name    = "${var.project_name}-lambda-deploy-role"
+      Purpose = "GitHub Actions role for Lambda code deployment"
+    }
+  )
+}
+
+# IAM Policy for Lambda Code Deployment
+# Least-privilege policy: ONLY allows updating Lambda function code,
+# not infrastructure changes.
+
+resource "aws_iam_role_policy" "github_lambda_deploy" {
+  name = "${var.project_name}-lambda-deploy-policy"
+  role = aws_iam_role.github_lambda_deploy.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:UpdateFunctionCode",
+          "lambda:GetFunction",
+          "lambda:GetFunctionConfiguration"
+        ]
+        Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-*"
+      }
+    ]
+  })
 }
