@@ -240,10 +240,6 @@ resource "aws_iam_role" "api_gateway_cloudwatch" {
       }
     ]
   })
-
-  tags = {
-    project = "hagrid"
-  }
 }
 
 # Attach AWS managed policy for API Gateway CloudWatch logging
