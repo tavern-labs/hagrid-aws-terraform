@@ -111,6 +111,12 @@ resource "aws_api_gateway_rest_api" "hagrid_api" {
   )
 }
 
+# API Gateway account settings for CloudWatch logging
+# This is a one-time account-level setting required for stage logging
+resource "aws_api_gateway_account" "main" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
+}
+
 # API Gateway resource: /slack
 resource "aws_api_gateway_resource" "slack" {
   rest_api_id = aws_api_gateway_rest_api.hagrid_api.id
@@ -170,6 +176,11 @@ resource "aws_api_gateway_stage" "prod" {
   deployment_id = aws_api_gateway_deployment.prod.id
   rest_api_id   = aws_api_gateway_rest_api.hagrid_api.id
   stage_name    = "prod"
+
+  # Ensure account-level CloudWatch settings are configured first
+  depends_on = [
+    aws_api_gateway_account.main
+  ]
 
   # Enable CloudWatch logging for debugging
   access_log_settings {

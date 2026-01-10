@@ -217,3 +217,37 @@ resource "aws_iam_role_policy" "event_handler_dynamodb" {
     ]
   })
 }
+
+# ----------------------------------------------------------------------------
+# API Gateway CloudWatch Role (Account-Level)
+# ----------------------------------------------------------------------------
+# This is a one-time account setting required for API Gateway stage logging.
+# The role is intentionally not prefixed with the project name since it's a
+# global account resource shared across all API Gateways in the AWS account.
+
+resource "aws_iam_role" "api_gateway_cloudwatch" {
+  name = "api-gateway-cloudwatch-global"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    project = "hagrid"
+  }
+}
+
+# Attach AWS managed policy for API Gateway CloudWatch logging
+resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
+  role       = aws_iam_role.api_gateway_cloudwatch.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+}
