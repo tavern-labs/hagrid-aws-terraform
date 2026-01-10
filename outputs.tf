@@ -86,6 +86,39 @@ output "event_handler_function_arn" {
   value       = module.event_handler_lambda.function_arn
 }
 
+# Conversation Manager Lambda outputs
+output "conversation_manager_function_name" {
+  description = "Name of the Conversation Manager Lambda function"
+  value       = module.conversation_manager_lambda.function_name
+}
+
+output "conversation_manager_function_arn" {
+  description = "ARN of the Conversation Manager Lambda function"
+  value       = module.conversation_manager_lambda.function_arn
+}
+
+# Approval Manager Lambda outputs
+output "approval_manager_function_name" {
+  description = "Name of the Approval Manager Lambda function"
+  value       = module.approval_manager_lambda.function_name
+}
+
+output "approval_manager_function_arn" {
+  description = "ARN of the Approval Manager Lambda function"
+  value       = module.approval_manager_lambda.function_arn
+}
+
+# Okta Provisioner Lambda outputs
+output "okta_provisioner_function_name" {
+  description = "Name of the Okta Provisioner Lambda function"
+  value       = module.okta_provisioner_lambda.function_name
+}
+
+output "okta_provisioner_function_arn" {
+  description = "ARN of the Okta Provisioner Lambda function"
+  value       = module.okta_provisioner_lambda.function_arn
+}
+
 # GitHub Actions OIDC outputs
 output "github_lambda_deploy_role_arn" {
   description = "ARN of the GitHub Actions role for Lambda deployment (use this in GitHub repository secrets)"

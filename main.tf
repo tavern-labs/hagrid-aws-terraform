@@ -72,15 +72,15 @@ module "dynamodb_tables" {
   project_name = var.project_name
 }
 
-# Event Handler Lambda for Slack webhook events
+# Event Handler Lambda - Slack webhook receiver that validates and routes incoming events
 module "event_handler_lambda" {
   source = "./modules/lambda"
 
   function_name = "${var.project_name}-event-handler"
   handler       = "handler.lambda_handler"
   runtime       = "python3.12"
-  memory_size   = 128
-  timeout       = 10
+  memory_size   = 256
+  timeout       = 30
   aws_region    = var.aws_region
   role_arn      = aws_iam_role.event_handler_lambda_role.arn
 
@@ -91,6 +91,66 @@ module "event_handler_lambda" {
     SSM_PARAMETER_NAME         = aws_ssm_parameter.app_context.name
     OKTA_CREDENTIALS_SSM_NAME  = aws_ssm_parameter.okta_credentials.name
     LOG_LEVEL                  = "INFO"
+  }
+}
+
+# Conversation Manager Lambda - AI/NLP processing engine for intent detection and conversation flow
+module "conversation_manager_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-conversation-manager"
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.12"
+  memory_size   = 512
+  timeout       = 60
+  aws_region    = var.aws_region
+  role_arn      = aws_iam_role.conversation_manager_lambda_role.arn
+
+  environment_variables = {
+    CONVERSATIONS_TABLE        = module.dynamodb_tables.conversations_table_name
+    ACCESS_REQUESTS_TABLE      = module.dynamodb_tables.access_requests_table_name
+    APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
+    SSM_PARAMETER_NAME         = aws_ssm_parameter.app_context.name
+    LOG_LEVEL                  = "INFO"
+  }
+}
+
+# Approval Manager Lambda - Sends approval DMs to designated approvers and handles button responses
+module "approval_manager_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-approval-manager"
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.12"
+  memory_size   = 256
+  timeout       = 30
+  aws_region    = var.aws_region
+  role_arn      = aws_iam_role.approval_manager_lambda_role.arn
+
+  environment_variables = {
+    CONVERSATIONS_TABLE        = module.dynamodb_tables.conversations_table_name
+    ACCESS_REQUESTS_TABLE      = module.dynamodb_tables.access_requests_table_name
+    APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
+    OKTA_PROVISIONER_FUNCTION  = "${var.project_name}-okta-provisioner"
+    LOG_LEVEL                  = "INFO"
+  }
+}
+
+# Okta Provisioner Lambda - Adds users to Okta groups upon approval
+module "okta_provisioner_lambda" {
+  source = "./modules/lambda"
+
+  function_name = "${var.project_name}-okta-provisioner"
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.12"
+  memory_size   = 256
+  timeout       = 30
+  aws_region    = var.aws_region
+  role_arn      = aws_iam_role.okta_provisioner_lambda_role.arn
+
+  environment_variables = {
+    OKTA_CREDENTIALS_SSM_NAME = aws_ssm_parameter.okta_credentials.name
+    LOG_LEVEL                 = "INFO"
   }
 }
 
