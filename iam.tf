@@ -219,6 +219,277 @@ resource "aws_iam_role_policy" "event_handler_dynamodb" {
 }
 
 # ----------------------------------------------------------------------------
+# Conversation Manager Lambda Role
+# ----------------------------------------------------------------------------
+
+resource "aws_iam_role" "conversation_manager_lambda_role" {
+  name = "${var.project_name}-conversation-manager-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name    = "${var.project_name}-conversation-manager-role"
+      Purpose = "Execution role for AI/NLP conversation manager Lambda"
+    }
+  )
+}
+
+# CloudWatch Logs policy for Conversation Manager Lambda
+resource "aws_iam_role_policy" "conversation_manager_cloudwatch" {
+  name = "${var.project_name}-conversation-manager-cloudwatch"
+  role = aws_iam_role.conversation_manager_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.project_name}-conversation-manager:*"
+      }
+    ]
+  })
+}
+
+# DynamoDB access for Conversation Manager Lambda
+resource "aws_iam_role_policy" "conversation_manager_dynamodb" {
+  name = "${var.project_name}-conversation-manager-dynamodb"
+  role = aws_iam_role.conversation_manager_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          module.dynamodb_tables.conversations_table_arn,
+          module.dynamodb_tables.access_requests_table_arn,
+          module.dynamodb_tables.approval_messages_table_arn,
+          "${module.dynamodb_tables.conversations_table_arn}/index/*",
+          "${module.dynamodb_tables.access_requests_table_arn}/index/*",
+          "${module.dynamodb_tables.approval_messages_table_arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
+# SSM Parameter read access for Conversation Manager
+resource "aws_iam_role_policy" "conversation_manager_ssm" {
+  name = "${var.project_name}-conversation-manager-ssm"
+  role = aws_iam_role.conversation_manager_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/*"
+      }
+    ]
+  })
+}
+
+# ----------------------------------------------------------------------------
+# Approval Manager Lambda Role
+# ----------------------------------------------------------------------------
+
+resource "aws_iam_role" "approval_manager_lambda_role" {
+  name = "${var.project_name}-approval-manager-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name    = "${var.project_name}-approval-manager-role"
+      Purpose = "Execution role for approval manager Lambda"
+    }
+  )
+}
+
+# CloudWatch Logs policy for Approval Manager Lambda
+resource "aws_iam_role_policy" "approval_manager_cloudwatch" {
+  name = "${var.project_name}-approval-manager-cloudwatch"
+  role = aws_iam_role.approval_manager_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.project_name}-approval-manager:*"
+      }
+    ]
+  })
+}
+
+# DynamoDB access for Approval Manager Lambda
+resource "aws_iam_role_policy" "approval_manager_dynamodb" {
+  name = "${var.project_name}-approval-manager-dynamodb"
+  role = aws_iam_role.approval_manager_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          module.dynamodb_tables.conversations_table_arn,
+          module.dynamodb_tables.access_requests_table_arn,
+          module.dynamodb_tables.approval_messages_table_arn,
+          "${module.dynamodb_tables.conversations_table_arn}/index/*",
+          "${module.dynamodb_tables.access_requests_table_arn}/index/*",
+          "${module.dynamodb_tables.approval_messages_table_arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Lambda invoke policy for Approval Manager to call okta-provisioner
+resource "aws_iam_role_policy" "approval_manager_lambda_invoke" {
+  name = "${var.project_name}-approval-manager-lambda-invoke"
+  role = aws_iam_role.approval_manager_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = "arn:aws:lambda:${var.aws_region}:*:function:${var.project_name}-okta-provisioner"
+      }
+    ]
+  })
+}
+
+# ----------------------------------------------------------------------------
+# Okta Provisioner Lambda Role
+# ----------------------------------------------------------------------------
+
+resource "aws_iam_role" "okta_provisioner_lambda_role" {
+  name = "${var.project_name}-okta-provisioner-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name    = "${var.project_name}-okta-provisioner-role"
+      Purpose = "Execution role for Okta provisioner Lambda"
+    }
+  )
+}
+
+# CloudWatch Logs policy for Okta Provisioner Lambda
+resource "aws_iam_role_policy" "okta_provisioner_cloudwatch" {
+  name = "${var.project_name}-okta-provisioner-cloudwatch"
+  role = aws_iam_role.okta_provisioner_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.project_name}-okta-provisioner:*"
+      }
+    ]
+  })
+}
+
+# SSM Parameter read access for Okta Provisioner (Okta credentials)
+resource "aws_iam_role_policy" "okta_provisioner_ssm" {
+  name = "${var.project_name}-okta-provisioner-ssm"
+  role = aws_iam_role.okta_provisioner_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = aws_ssm_parameter.okta_credentials.arn
+      }
+    ]
+  })
+}
+
+# ----------------------------------------------------------------------------
 # API Gateway CloudWatch Role (Account-Level)
 # ----------------------------------------------------------------------------
 # This is a one-time account setting required for API Gateway stage logging.
