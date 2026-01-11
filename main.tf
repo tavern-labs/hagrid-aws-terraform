@@ -96,7 +96,7 @@ module "event_handler_lambda" {
   source = "./modules/lambda"
 
   function_name = "${var.project_name}-event-handler"
-  handler       = "handler.lambda_handler"
+  handler       = "index.lambda_handler"
   runtime       = "python3.12"
   memory_size   = 256
   timeout       = 30
