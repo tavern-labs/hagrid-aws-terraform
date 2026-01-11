@@ -46,6 +46,25 @@ resource "aws_ssm_parameter" "okta_credentials" {
   }
 }
 
+# SSM Parameter to store Slack signing secret
+resource "aws_ssm_parameter" "slack_signing_secret" {
+  name        = "/${var.project_name}/slack-signing-secret"
+  description = "Slack signing secret for webhook request verification"
+  type        = "SecureString"
+  value       = "placeholder"
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-slack-signing-secret"
+    }
+  )
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
 # Catalog Builder Lambda - builds context from Okta apps and groups
 module "catalog_builder_lambda" {
   source = "./modules/lambda"
@@ -90,6 +109,7 @@ module "event_handler_lambda" {
     APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
     SSM_PARAMETER_NAME         = aws_ssm_parameter.app_context.name
     OKTA_CREDENTIALS_SSM_NAME  = aws_ssm_parameter.okta_credentials.name
+    SLACK_SIGNING_SECRET_SSM   = aws_ssm_parameter.slack_signing_secret.name
     LOG_LEVEL                  = "INFO"
   }
 }
