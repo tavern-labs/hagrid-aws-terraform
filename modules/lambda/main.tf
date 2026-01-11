@@ -35,9 +35,6 @@ resource "aws_lambda_function" "function" {
       runtime,
       layers,
 
-      # Environment variables - may be updated manually
-      environment,
-
       # Performance tuning - may be adjusted in production
       memory_size,
       timeout,
