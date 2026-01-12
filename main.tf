@@ -176,7 +176,7 @@ module "conversation_manager_lambda" {
   source = "./modules/lambda"
 
   function_name = "${var.project_name}-conversation-manager"
-  handler       = "handler.lambda_handler"
+  handler       = "index.lambda_handler"
   runtime       = "python3.12"
   memory_size   = 512
   timeout       = 60
@@ -200,7 +200,7 @@ module "approval_manager_lambda" {
   source = "./modules/lambda"
 
   function_name = "${var.project_name}-approval-manager"
-  handler       = "handler.lambda_handler"
+  handler       = "index.lambda_handler"
   runtime       = "python3.12"
   memory_size   = 256
   timeout       = 30
@@ -221,7 +221,7 @@ module "okta_provisioner_lambda" {
   source = "./modules/lambda"
 
   function_name = "${var.project_name}-okta-provisioner"
-  handler       = "handler.lambda_handler"
+  handler       = "index.lambda_handler"
   runtime       = "python3.12"
   memory_size   = 256
   timeout       = 30
