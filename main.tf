@@ -4,18 +4,18 @@ locals {
   }
 }
 
-# SSM Parameter to store app context for the AI bot
-resource "aws_ssm_parameter" "app_context" {
-  name        = "/${var.project_name}/app-context"
+# SSM Parameter to store Okta catalog for the AI bot
+resource "aws_ssm_parameter" "okta_catalog" {
+  name        = "/${var.project_name}/okta-catalog"
   description = "Context information about Okta apps and groups for AI bot"
-  type        = "SecureString"
-  value       = "Placeholder - will be updated by context-updater Lambda"
+  type        = "String"
+  value       = "Placeholder - will be updated by catalog-builder Lambda"
 
   tags = merge(
     local.common_tags,
     {
-      Name        = "${var.project_name}-app-context"
-      Description = "Auto-updated by context-updater Lambda"
+      Name        = "${var.project_name}-okta-catalog"
+      Description = "Auto-updated by catalog-builder Lambda"
     }
   )
 
@@ -65,6 +65,63 @@ resource "aws_ssm_parameter" "slack_signing_secret" {
   }
 }
 
+# SSM Parameter to store Slack bot token
+resource "aws_ssm_parameter" "slack_bot_token" {
+  name        = "/${var.project_name}/slack-bot-token"
+  description = "Slack bot token for API authentication"
+  type        = "SecureString"
+  value       = "placeholder"
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-slack-bot-token"
+    }
+  )
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+# SSM Parameter to store Gemini API key
+resource "aws_ssm_parameter" "gemini_api_key" {
+  name        = "/${var.project_name}/gemini-api-key"
+  description = "Google Gemini API key for AI processing"
+  type        = "SecureString"
+  value       = "placeholder"
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-gemini-api-key"
+    }
+  )
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+# SSM Parameter to store system prompt
+resource "aws_ssm_parameter" "system_prompt" {
+  name        = "/${var.project_name}/system-prompt"
+  description = "System prompt for AI bot behavior and instructions"
+  type        = "String"
+  value       = "Placeholder - configure system prompt for AI behavior"
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-system-prompt"
+    }
+  )
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
 # Catalog Builder Lambda - builds context from Okta apps and groups
 module "catalog_builder_lambda" {
   source = "./modules/lambda"
@@ -78,7 +135,7 @@ module "catalog_builder_lambda" {
   role_arn      = aws_iam_role.catalog_builder_lambda_role.arn
 
   environment_variables = {
-    SSM_PARAMETER_NAME        = aws_ssm_parameter.app_context.name
+    SSM_PARAMETER_NAME        = aws_ssm_parameter.okta_catalog.name
     OKTA_CREDENTIALS_SSM_NAME = aws_ssm_parameter.okta_credentials.name
     LOG_LEVEL                 = "INFO"
   }
