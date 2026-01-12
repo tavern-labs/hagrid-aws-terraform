@@ -164,7 +164,7 @@ module "event_handler_lambda" {
     CONVERSATIONS_TABLE        = module.dynamodb_tables.conversations_table_name
     ACCESS_REQUESTS_TABLE      = module.dynamodb_tables.access_requests_table_name
     APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
-    SSM_PARAMETER_NAME         = aws_ssm_parameter.app_context.name
+    SSM_PARAMETER_NAME         = aws_ssm_parameter.okta_catalog.name
     OKTA_CREDENTIALS_SSM_NAME  = aws_ssm_parameter.okta_credentials.name
     SLACK_SIGNING_SECRET_SSM   = aws_ssm_parameter.slack_signing_secret.name
     LOG_LEVEL                  = "INFO"
@@ -187,7 +187,7 @@ module "conversation_manager_lambda" {
     CONVERSATIONS_TABLE        = module.dynamodb_tables.conversations_table_name
     ACCESS_REQUESTS_TABLE      = module.dynamodb_tables.access_requests_table_name
     APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
-    SSM_PARAMETER_NAME         = aws_ssm_parameter.app_context.name
+    SSM_PARAMETER_NAME         = aws_ssm_parameter.okta_catalog.name
     LOG_LEVEL                  = "INFO"
   }
 }
