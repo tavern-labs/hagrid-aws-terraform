@@ -39,3 +39,4 @@ terraform.rc
 # Ignore Lambda placeholder files
 modules/okta_app_group_lambda/placeholder/
 modules/okta_app_group_lambda/placeholder.zip
+modules/lambda/placeholder/
