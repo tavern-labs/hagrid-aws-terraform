@@ -57,6 +57,10 @@ resource "local_file" "placeholder_code" {
     def lambda_handler(event, context):
         return {'statusCode': 200, 'body': 'Placeholder - update code manually or via CI/CD'}
   EOT
+
+  lifecycle {
+    ignore_changes = [content, filename]
+  }
 }
 
 data "archive_file" "placeholder" {
