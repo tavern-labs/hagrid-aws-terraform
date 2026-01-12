@@ -8,7 +8,7 @@ locals {
 resource "aws_ssm_parameter" "okta_catalog" {
   name        = "/${var.project_name}/okta-catalog"
   description = "Context information about Okta apps and groups for AI bot"
-  type        = "String"
+  type        = "SecureString"
   value       = "Placeholder - will be updated by catalog-builder Lambda"
 
   tags = merge(
