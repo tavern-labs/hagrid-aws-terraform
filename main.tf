@@ -187,7 +187,10 @@ module "conversation_manager_lambda" {
     CONVERSATIONS_TABLE        = module.dynamodb_tables.conversations_table_name
     ACCESS_REQUESTS_TABLE      = module.dynamodb_tables.access_requests_table_name
     APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
-    SSM_PARAMETER_NAME         = aws_ssm_parameter.okta_catalog.name
+    OKTA_CATALOG_SSM           = aws_ssm_parameter.okta_catalog.name
+    SLACK_BOT_TOKEN_SSM        = aws_ssm_parameter.slack_bot_token.name
+    GEMINI_API_KEY_SSM         = aws_ssm_parameter.gemini_api_key.name
+    SYSTEM_PROMPT_SSM          = aws_ssm_parameter.system_prompt.name
     LOG_LEVEL                  = "INFO"
   }
 }
