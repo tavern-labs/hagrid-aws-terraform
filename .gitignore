@@ -36,6 +36,10 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# Ignore Lambda placeholder files
+# Ignore dynamically generated Lambda placeholder files (old approach)
 modules/okta_app_group_lambda/placeholder/
 modules/okta_app_group_lambda/placeholder.zip
+modules/lambda/placeholder/
+modules/lambda/placeholder_static/
+
+# Note: modules/lambda/placeholder.zip is committed (static file used by all functions)

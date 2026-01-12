@@ -13,9 +13,10 @@ resource "aws_lambda_function" "function" {
   timeout       = var.timeout
   memory_size   = var.memory_size
 
-  # Minimal placeholder code - update manually in console or via CI/CD
-  filename         = data.archive_file.placeholder.output_path
-  source_code_hash = data.archive_file.placeholder.output_base64sha256
+  # Static placeholder code - update manually in console or via CI/CD
+  # All Lambda functions share the same minimal placeholder.zip
+  filename         = "${path.module}/placeholder.zip"
+  source_code_hash = filebase64sha256("${path.module}/placeholder.zip")
 
   environment {
     variables = var.environment_variables
@@ -47,24 +48,5 @@ resource "aws_lambda_function" "function" {
 
   tags = {
     Name = var.function_name
-  }
-}
-
-# Minimal placeholder code for initial deployment
-resource "local_file" "placeholder_code" {
-  filename = "${path.module}/placeholder/${var.function_name}/index.py"
-  content  = <<-EOT
-    def lambda_handler(event, context):
-        return {'statusCode': 200, 'body': 'Placeholder - update code manually or via CI/CD'}
-  EOT
-}
-
-data "archive_file" "placeholder" {
-  type        = "zip"
-  output_path = "${path.module}/placeholder/${var.function_name}.zip"
-
-  source {
-    content  = local_file.placeholder_code.content
-    filename = "index.py"
   }
 }
