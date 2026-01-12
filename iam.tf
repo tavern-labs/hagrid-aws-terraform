@@ -75,7 +75,7 @@ resource "aws_iam_role_policy" "catalog_builder_lambda_ssm" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      # Write access to app context parameter
+      # Write access to Okta catalog parameter
       {
         Effect = "Allow"
         Action = [
@@ -83,7 +83,7 @@ resource "aws_iam_role_policy" "catalog_builder_lambda_ssm" {
           "ssm:GetParameter",
           "ssm:GetParameters"
         ]
-        Resource = aws_ssm_parameter.app_context.arn
+        Resource = aws_ssm_parameter.okta_catalog.arn
       },
       # Read access to Okta credentials
       {
