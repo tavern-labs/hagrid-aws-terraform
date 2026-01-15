@@ -419,6 +419,26 @@ resource "aws_iam_role_policy" "approval_manager_lambda_invoke" {
   })
 }
 
+# SSM Parameter read access for Approval Manager
+resource "aws_iam_role_policy" "approval_manager_ssm" {
+  name = "${var.project_name}-approval-manager-ssm"
+  role = aws_iam_role.approval_manager_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/*"
+      }
+    ]
+  })
+}
+
 # ----------------------------------------------------------------------------
 # Okta Provisioner Lambda Role
 # ----------------------------------------------------------------------------
