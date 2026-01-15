@@ -299,6 +299,25 @@ resource "aws_iam_role_policy" "conversation_manager_dynamodb" {
   })
 }
 
+# Lambda invoke policy for conversation Manager to call approval manager
+resource "aws_iam_role_policy" "conversation_manager_lambda_invoke" {
+  name = "${var.project_name}-conversation-manager-lambda-invoke"
+  role = aws_iam_role.conversation_manager_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = "arn:aws:lambda:${var.aws_region}:*:function:${var.project_name}-approval-manager"
+      }
+    ]
+  })
+}
+
 # SSM Parameter read access for Conversation Manager
 resource "aws_iam_role_policy" "conversation_manager_ssm" {
   name = "${var.project_name}-conversation-manager-ssm"
