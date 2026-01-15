@@ -122,6 +122,25 @@ resource "aws_ssm_parameter" "system_prompt" {
   }
 }
 
+# SSM Parameter to store Okta catalog JSON data
+resource "aws_ssm_parameter" "okta_catalog_data" {
+  name        = "/${var.project_name}/okta-catalog-data"
+  description = "Okta catalog JSON data for approval manager"
+  type        = "String"
+  value       = "placeholder"
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project_name}-okta-catalog-data"
+    }
+  )
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
 # Catalog Builder Lambda - builds context from Okta apps and groups
 module "catalog_builder_lambda" {
   source = "./modules/lambda"
@@ -212,6 +231,8 @@ module "approval_manager_lambda" {
     ACCESS_REQUESTS_TABLE      = module.dynamodb_tables.access_requests_table_name
     APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
     OKTA_PROVISIONER_FUNCTION  = "${var.project_name}-okta-provisioner"
+    SLACK_BOT_TOKEN_SSM        = aws_ssm_parameter.slack_bot_token.name
+    OKTA_CATALOG_DATA_SSM      = aws_ssm_parameter.okta_catalog_data.name
     LOG_LEVEL                  = "INFO"
   }
 }
