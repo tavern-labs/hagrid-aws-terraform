@@ -1,11 +1,11 @@
-output "okta_catalog_parameter_name" {
-  description = "Name of the SSM parameter storing Okta catalog"
-  value       = aws_ssm_parameter.okta_catalog.name
+output "hagrid_catalog_bucket_name" {
+  description = "Name of the S3 bucket storing Hagrid catalog"
+  value       = aws_s3_bucket.hagrid_catalog.id
 }
 
-output "okta_catalog_parameter_arn" {
-  description = "ARN of the SSM parameter storing Okta catalog"
-  value       = aws_ssm_parameter.okta_catalog.arn
+output "hagrid_catalog_bucket_arn" {
+  description = "ARN of the S3 bucket storing Hagrid catalog"
+  value       = aws_s3_bucket.hagrid_catalog.arn
 }
 
 output "okta_credentials_parameter_arn" {
