@@ -67,23 +67,21 @@ resource "aws_iam_role_policy" "catalog_builder_lambda_cloudwatch" {
   })
 }
 
-# SSM Parameter access for Catalog Builder Lambda
-resource "aws_iam_role_policy" "catalog_builder_lambda_ssm" {
-  name = "${var.project_name}-catalog-builder-lambda-ssm"
+# S3 and SSM access for Catalog Builder Lambda
+resource "aws_iam_role_policy" "catalog_builder_lambda_s3_ssm" {
+  name = "${var.project_name}-catalog-builder-lambda-s3-ssm"
   role = aws_iam_role.catalog_builder_lambda_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      # Write access to Okta catalog parameter
+      # Write access to catalog S3 bucket
       {
         Effect = "Allow"
         Action = [
-          "ssm:PutParameter",
-          "ssm:GetParameter",
-          "ssm:GetParameters"
+          "s3:PutObject"
         ]
-        Resource = aws_ssm_parameter.okta_catalog.arn
+        Resource = "${aws_s3_bucket.hagrid_catalog.arn}/*"
       },
       # Read access to Okta credentials
       {
@@ -318,14 +316,23 @@ resource "aws_iam_role_policy" "conversation_manager_lambda_invoke" {
   })
 }
 
-# SSM Parameter read access for Conversation Manager
-resource "aws_iam_role_policy" "conversation_manager_ssm" {
-  name = "${var.project_name}-conversation-manager-ssm"
+# S3 and SSM access for Conversation Manager
+resource "aws_iam_role_policy" "conversation_manager_s3_ssm" {
+  name = "${var.project_name}-conversation-manager-s3-ssm"
   role = aws_iam_role.conversation_manager_lambda_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # Read access to catalog S3 bucket
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${aws_s3_bucket.hagrid_catalog.arn}/*"
+      },
+      # Read access to SSM parameters
       {
         Effect = "Allow"
         Action = [
@@ -438,14 +445,23 @@ resource "aws_iam_role_policy" "approval_manager_lambda_invoke" {
   })
 }
 
-# SSM Parameter read access for Approval Manager
-resource "aws_iam_role_policy" "approval_manager_ssm" {
-  name = "${var.project_name}-approval-manager-ssm"
+# S3 and SSM access for Approval Manager
+resource "aws_iam_role_policy" "approval_manager_s3_ssm" {
+  name = "${var.project_name}-approval-manager-s3-ssm"
   role = aws_iam_role.approval_manager_lambda_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # Read access to catalog S3 bucket
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${aws_s3_bucket.hagrid_catalog.arn}/*"
+      },
+      # Read access to SSM parameters
       {
         Effect = "Allow"
         Action = [

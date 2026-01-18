@@ -4,23 +4,39 @@ locals {
   }
 }
 
-# SSM Parameter to store Okta catalog for the AI bot
-resource "aws_ssm_parameter" "okta_catalog" {
-  name        = "/${var.project_name}/okta-catalog"
-  description = "Context information about Okta apps and groups for AI bot"
-  type        = "SecureString"
-  value       = "Placeholder - will be updated by catalog-builder Lambda"
+# Random ID for S3 bucket uniqueness
+resource "random_id" "catalog_bucket" {
+  byte_length = 8
+}
+
+# S3 bucket for Hagrid catalog storage
+resource "aws_s3_bucket" "hagrid_catalog" {
+  bucket = "${var.project_name}-catalog-${random_id.catalog_bucket.hex}"
 
   tags = merge(
     local.common_tags,
     {
-      Name        = "${var.project_name}-okta-catalog"
-      Description = "Auto-updated by catalog-builder Lambda"
+      Name = "${var.project_name}-catalog"
     }
   )
+}
 
-  lifecycle {
-    ignore_changes = [value]
+# Block all public access to catalog bucket
+resource "aws_s3_bucket_public_access_block" "hagrid_catalog" {
+  bucket = aws_s3_bucket.hagrid_catalog.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Enable versioning on catalog bucket
+resource "aws_s3_bucket_versioning" "hagrid_catalog" {
+  bucket = aws_s3_bucket.hagrid_catalog.id
+
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
@@ -122,25 +138,6 @@ resource "aws_ssm_parameter" "system_prompt" {
   }
 }
 
-# SSM Parameter to store Okta catalog JSON data
-resource "aws_ssm_parameter" "okta_catalog_data" {
-  name        = "/${var.project_name}/okta-catalog-data"
-  description = "Okta catalog JSON data for approval manager"
-  type        = "String"
-  value       = "placeholder"
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${var.project_name}-okta-catalog-data"
-    }
-  )
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
 # Catalog Builder Lambda - builds context from Okta apps and groups
 module "catalog_builder_lambda" {
   source = "./modules/lambda"
@@ -154,7 +151,7 @@ module "catalog_builder_lambda" {
   role_arn      = aws_iam_role.catalog_builder_lambda_role.arn
 
   environment_variables = {
-    SSM_PARAMETER_NAME        = aws_ssm_parameter.okta_catalog.name
+    CATALOG_S3_BUCKET         = aws_s3_bucket.hagrid_catalog.id
     OKTA_CREDENTIALS_SSM_NAME = aws_ssm_parameter.okta_credentials.name
     LOG_LEVEL                 = "INFO"
   }
@@ -183,7 +180,6 @@ module "event_handler_lambda" {
     CONVERSATIONS_TABLE        = module.dynamodb_tables.conversations_table_name
     ACCESS_REQUESTS_TABLE      = module.dynamodb_tables.access_requests_table_name
     APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
-    SSM_PARAMETER_NAME         = aws_ssm_parameter.okta_catalog.name
     OKTA_CREDENTIALS_SSM_NAME  = aws_ssm_parameter.okta_credentials.name
     SLACK_SIGNING_SECRET_SSM   = aws_ssm_parameter.slack_signing_secret.name
     LOG_LEVEL                  = "INFO"
@@ -206,7 +202,7 @@ module "conversation_manager_lambda" {
     CONVERSATIONS_TABLE        = module.dynamodb_tables.conversations_table_name
     ACCESS_REQUESTS_TABLE      = module.dynamodb_tables.access_requests_table_name
     APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
-    OKTA_CATALOG_SSM           = aws_ssm_parameter.okta_catalog.name
+    CATALOG_S3_BUCKET          = aws_s3_bucket.hagrid_catalog.id
     SLACK_BOT_TOKEN_SSM        = aws_ssm_parameter.slack_bot_token.name
     GEMINI_API_KEY_SSM         = aws_ssm_parameter.gemini_api_key.name
     SYSTEM_PROMPT_SSM          = aws_ssm_parameter.system_prompt.name
@@ -232,7 +228,7 @@ module "approval_manager_lambda" {
     APPROVAL_MESSAGES_TABLE    = module.dynamodb_tables.approval_messages_table_name
     OKTA_PROVISIONER_FUNCTION  = "${var.project_name}-okta-provisioner"
     SLACK_BOT_TOKEN_SSM        = aws_ssm_parameter.slack_bot_token.name
-    OKTA_CATALOG_DATA_SSM      = aws_ssm_parameter.okta_catalog_data.name
+    CATALOG_S3_BUCKET          = aws_s3_bucket.hagrid_catalog.id
     LOG_LEVEL                  = "INFO"
   }
 }
